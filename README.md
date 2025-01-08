@@ -1,15 +1,17 @@
-# ghostty
+# Ghostty Terminal Animation
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
+### Install and Run
 
 ```bash
-bun run index.ts
+npm install -g ghostty
 ```
 
-This project was created using `bun init` in bun v1.1.42. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+```bash
+ghostty
+```
+
+### Run without installing
+
+```bash
+npx ghostty | bunx ghostty
+```

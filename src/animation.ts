@@ -1,51 +1,66 @@
-interface TextSpan {
-  content: string;
-  isColored: boolean;
-}
-
 interface Frame {
-  lines: TextSpan[][];
+  content: string;
 }
 
 export class Animation {
   private static frames: Frame[] = [];
-  private static readonly BLUE_COLOR = '\x1b[34m';
-  private static readonly RESET_COLOR = '\x1b[0m';
+  private static readonly BLUE_COLOR = "\x1b[34m";
+  private static readonly RESET_COLOR = "\x1b[0m";
 
   static readonly IMAGE_WIDTH = 77;
   static readonly IMAGE_HEIGHT = 41;
 
   static initialize(animationData: string[][]) {
-    this.frames = animationData.map(frame => {
-      const lines = frame.map((line: string) => {
-        const spans: TextSpan[] = [];
-        const chunks = line.split('<color>').flatMap(x => x.split('</color>'));
+    // Pre-calculate all frames with ANSI codes
+    this.frames = animationData.map((frameLines) => {
+      // Process each line of the frame
+      const processedLines = frameLines.map((line) => {
+        let result = "";
+        let isInColor = false;
+        let currentChunk = "";
 
-        chunks.forEach((chunk, i) => {
-          spans.push({
-            content: chunk,
-            isColored: i % 2 === 1
-          });
-        });
+        // Process the line character by character
+        for (let i = 0; i < line.length; i++) {
+          if (line.slice(i, i + 7) === "<color>") {
+            if (currentChunk) {
+              result += currentChunk;
+              currentChunk = "";
+            }
+            isInColor = true;
+            i += 6; // Skip the <color> tag
+            continue;
+          }
+          if (line.slice(i, i + 8) === "</color>") {
+            if (currentChunk) {
+              result += this.BLUE_COLOR + currentChunk + this.RESET_COLOR;
+              currentChunk = "";
+            }
+            isInColor = false;
+            i += 7; // Skip the </color> tag
+            continue;
+          }
+          currentChunk += line[i];
+        }
 
-        return spans;
+        // Handle any remaining chunk
+        if (currentChunk) {
+          result += isInColor
+            ? this.BLUE_COLOR + currentChunk + this.RESET_COLOR
+            : currentChunk;
+        }
+
+        return result;
       });
 
-      return { lines };
+      // Join lines with proper line endings
+      return {
+        content: processedLines.join("\n"),
+      };
     });
   }
 
   static getFrame(index: number): string {
-    const frame = this.frames[index];
-    return frame.lines
-      .map(line =>
-        line.map((span: TextSpan) =>
-          span.isColored
-            ? `${this.BLUE_COLOR}${span.content}${this.RESET_COLOR}`
-            : span.content
-        ).join('')
-      )
-      .join('\n');
+    return this.frames[index].content;
   }
 
   static get frameCount(): number {
