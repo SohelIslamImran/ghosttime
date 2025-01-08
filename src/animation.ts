@@ -6,7 +6,7 @@ type AnimationData = string[][]; // Complete animation sequence
 
 export class Animation {
   private static frames: Frame[] = [];
-  private static readonly BLUE_COLOR = "\x1b[34m";
+  private static highlightColor = "\x1b[34m"; // Default to blue
   private static readonly RESET_COLOR = "\x1b[0m";
   private static readonly COLOR_START_TAG = "<color>";
   private static readonly COLOR_END_TAG = "</color>";
@@ -15,6 +15,10 @@ export class Animation {
 
   static readonly IMAGE_WIDTH = 77;
   static readonly IMAGE_HEIGHT = 41;
+
+  static setHighlightColor(color: string) {
+    this.highlightColor = color;
+  }
 
   static initialize(animationData: AnimationData) {
     // Pre-calculate all frames with ANSI codes
@@ -50,7 +54,7 @@ export class Animation {
 
           // Add colored content
           parts.push(
-            this.BLUE_COLOR,
+            this.highlightColor,
             line.slice(contentStart, colorEnd),
             this.RESET_COLOR
           );

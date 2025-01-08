@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import process from "process";
 import { Animation } from "./animation";
 import { ANIMATION_DATA } from "./animation-data";
 import readline from "readline";
@@ -9,16 +10,96 @@ const FRAME_DELAY = MICROS_PER_FRAME / 1000; // convert to milliseconds
 const MAX_FRAME_SKIP = 3; // Maximum number of frames to skip if behind schedule
 const CLEAR_AND_HOME = "\x1b[2J\x1b[H";
 
-// Initialize animation with data
-Animation.initialize(ANIMATION_DATA);
+// Color mapping
+const colorMap: Record<string, string> = {
+  black: "\x1b[30m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  white: "\x1b[37m",
+  // Bright variants
+  brightblack: "\x1b[90m",
+  brightred: "\x1b[91m",
+  brightgreen: "\x1b[92m",
+  brightyellow: "\x1b[93m",
+  brightblue: "\x1b[94m",
+  brightmagenta: "\x1b[95m",
+  brightcyan: "\x1b[96m",
+  brightwhite: "\x1b[97m",
+};
 
-// Enable alternative screen buffer, hide cursor, and enable focus reporting
-process.stdout.write("\x1b[?1049h\x1b[?25l\x1b[?1004h");
+function showColorHelp() {
+  console.log("\nAvailable colors:");
+  console.log("----------------");
+  for (const [name, code] of Object.entries(colorMap)) {
+    console.log(`${code}${name}\x1b[0m`);
+  }
+  console.log("\nUsage:");
+  console.log(
+    "  ghostty -c <color>        Use a color name from the list above"
+  );
+  console.log(
+    "  ghostty -c <number>       Use an ANSI color code (30-37 or 90-97)"
+  );
+  console.log("  ghostty --colors          Show this color help");
+  console.log("  ghostty --select-color    Interactively select a color");
+  process.exit(0);
+}
 
-// Setup raw mode for keyboard input
-readline.emitKeypressEvents(process.stdin);
-if (process.stdin.isTTY) {
-  process.stdin.setRawMode(true);
+async function selectColorInteractively(): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  console.log("\nAvailable colors:");
+  console.log("----------------");
+
+  const colors = Object.entries(colorMap);
+  for (const [index, [name, code]] of colors.entries()) {
+    console.log(`${index + 1}. ${code}${name}\x1b[0m`);
+  }
+
+  return new Promise((resolve) => {
+    rl.question(`\nSelect a color (1-${colors.length}): `, (answer) => {
+      const index = Number.parseInt(answer) - 1;
+      if (index >= 0 && index < colors.length) {
+        resolve(colors[index][1]);
+      } else {
+        resolve("\x1b[34m"); // Default to blue if invalid selection
+      }
+    });
+  });
+}
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+let colorArg = "\x1b[34m"; // Default blue color
+
+async function parseArgs() {
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--colors" || args[i] === "-h" || args[i] === "--help") {
+      showColorHelp();
+    } else if (args[i] === "--select-color") {
+      colorArg = await selectColorInteractively();
+    } else if (args[i] === "--color" || args[i] === "-c") {
+      const color = args[i + 1];
+      if (color) {
+        if (color.startsWith("\x1b[")) {
+          colorArg = color;
+        } else if (/^\d+$/.test(color)) {
+          // If it's a number, treat it as an ANSI color code
+          colorArg = `\x1b[${color}m`;
+        } else {
+          colorArg = colorMap[color.toLowerCase()] || "\x1b[34m";
+        }
+      }
+      break;
+    }
+  }
 }
 
 // Pre-calculate terminal dimensions
@@ -238,8 +319,30 @@ async function runAnimation() {
   }
 }
 
-// Start the animation
-runAnimation().catch((error) => {
-  console.error(error);
-  cleanup();
-});
+// Initialize and start the animation
+async function main() {
+  await parseArgs();
+
+  // Set the highlight color before initializing
+  Animation.setHighlightColor(colorArg);
+
+  // Initialize animation with data
+  Animation.initialize(ANIMATION_DATA);
+
+  // Enable alternative screen buffer, hide cursor, and enable focus reporting
+  process.stdout.write("\x1b[?1049h\x1b[?25l\x1b[?1004h");
+
+  // Setup raw mode for keyboard input
+  readline.emitKeypressEvents(process.stdin);
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+
+  // Start the animation
+  runAnimation().catch((error: Error) => {
+    console.error(error);
+    cleanup();
+  });
+}
+
+main();
