@@ -185,7 +185,6 @@ async function runAnimation() {
   let lastFrameTime = start;
   let focusLostTime = 0;
   let totalPausedTime = 0;
-  let skippedFrames = 0;
 
   while (true) {
     const now = performance.now();
@@ -221,7 +220,6 @@ async function runAnimation() {
     ) {
       // Skip frames if we're too far behind
       if (behind > MAX_FRAME_SKIP) {
-        skippedFrames += behind - 1;
         totalPausedTime += (behind - 1) * FRAME_DELAY; // Adjust pause time to catch up
       }
 

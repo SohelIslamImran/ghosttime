@@ -1,7 +1,8 @@
 interface Frame {
-  content: string;
   lines: string[]; // Pre-split lines for faster access
 }
+
+type AnimationData = string[][]; // Complete animation sequence
 
 export class Animation {
   private static frames: Frame[] = [];
@@ -15,13 +16,11 @@ export class Animation {
   static readonly IMAGE_WIDTH = 77;
   static readonly IMAGE_HEIGHT = 41;
 
-  static initialize(animationData: string[][]) {
+  static initialize(animationData: AnimationData) {
     // Pre-calculate all frames with ANSI codes
     this.frames = animationData.map((frameLines) => {
       // Process each line of the frame
       const processedLines = frameLines.map((line) => {
-        // Estimate the final string length to pre-allocate buffer
-        const estimatedLength = line.length + 20; // Account for color codes
         const parts: string[] = [];
         let currentIndex = 0;
 
@@ -63,14 +62,9 @@ export class Animation {
       });
 
       return {
-        content: processedLines.join("\n"),
-        lines: processedLines, // Store pre-split lines
+        lines: processedLines, // Store pre-split lines for faster rendering
       };
     });
-  }
-
-  static getFrame(index: number): string {
-    return this.frames[index].content;
   }
 
   static getFrameLines(index: number): string[] {
