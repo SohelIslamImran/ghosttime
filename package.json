@@ -1,6 +1,6 @@
 {
   "name": "ghostty",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Ghostty Terminal Animation",
   "module": "src/cli.ts",
   "type": "module",
@@ -11,6 +11,7 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "bun run build",
     "build": "bun build ./src/cli.ts --outdir=dist --target=node --minify",
     "start": "bun dist/cli.js",
     "dev": "bun run ./src/cli.ts"
@@ -19,5 +20,17 @@
     "@biomejs/biome": "1.9.4",
     "@types/bun": "latest",
     "typescript": "^5.0.0"
-  }
+  },
+   "keywords": [
+    "ghostty",
+    "terminal",
+    "animation"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/SohelIslamImran/ghostty",
+  "bugs": {
+    "url": "https://github.com/SohelIslamImran/ghostty/issues"
+  },
+  "homepage": "https://github.com/SohelIslamImran/ghostty#readme",
+  "author": "SohelIslamImran <sohelislamimran@gmail.com> (https://github.com/SohelIslamImran)"
 }
