@@ -34,7 +34,6 @@ const newlineCache = new Map<number, string>();
 // Buffer for frame rendering
 const outputBuffer = new Uint8Array(1024 * 64); // 64KB buffer for output
 let outputPosition = 0;
-const textEncoder = new TextEncoder();
 let lastFrameIndex = -1; // Track last rendered frame to avoid re-rendering same frame
 let lastVerticalPadding = 0;
 let lastHorizontalPadding = 0;
@@ -99,7 +98,7 @@ function getNewlineString(count: number): string {
 }
 
 function writeToBuffer(str: string) {
-  const bytes = textEncoder.encode(str);
+  const bytes = Buffer.from(str);
   const len = bytes.length;
   if (outputPosition + len > outputBuffer.length) {
     // If buffer is full, flush it
