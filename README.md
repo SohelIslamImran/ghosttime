@@ -2,6 +2,8 @@
 
 Ghostty animation for your terminal with customizable colors.
 
+![Ghosttime Demo](./ghostty.mov)
+
 ### Install and run globally
 
 ```bash
