@@ -22,7 +22,8 @@
     "rules": {
       "recommended": true,
       "style": {
-        "useNodejsImportProtocol": "off"
+        "useNodejsImportProtocol": "off",
+        "noNonNullAssertion": "warn"
       },
       "complexity": {
         "noStaticOnlyClass": "off",
