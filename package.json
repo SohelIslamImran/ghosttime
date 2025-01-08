@@ -1,0 +1,21 @@
+{
+  "name": "ghostty",
+  "version": "1.0.0",
+  "description": "Ghostty Terminal Animation",
+  "module": "index.ts",
+  "type": "module",
+  "bin": {
+    "ghostty": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}
