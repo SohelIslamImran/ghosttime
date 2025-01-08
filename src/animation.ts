@@ -1,11 +1,16 @@
 interface Frame {
   content: string;
+  lines: string[]; // Pre-split lines for faster access
 }
 
 export class Animation {
   private static frames: Frame[] = [];
   private static readonly BLUE_COLOR = "\x1b[34m";
   private static readonly RESET_COLOR = "\x1b[0m";
+  private static readonly COLOR_START_TAG = "<color>";
+  private static readonly COLOR_END_TAG = "</color>";
+  private static readonly COLOR_START_LEN = Animation.COLOR_START_TAG.length;
+  private static readonly COLOR_END_LEN = Animation.COLOR_END_TAG.length;
 
   static readonly IMAGE_WIDTH = 77;
   static readonly IMAGE_HEIGHT = 41;
@@ -15,52 +20,61 @@ export class Animation {
     this.frames = animationData.map((frameLines) => {
       // Process each line of the frame
       const processedLines = frameLines.map((line) => {
-        let result = "";
-        let isInColor = false;
-        let currentChunk = "";
+        // Estimate the final string length to pre-allocate buffer
+        const estimatedLength = line.length + 20; // Account for color codes
+        const parts: string[] = [];
+        let currentIndex = 0;
 
-        // Process the line character by character
-        for (let i = 0; i < line.length; i++) {
-          if (line.slice(i, i + 7) === "<color>") {
-            if (currentChunk) {
-              result += currentChunk;
-              currentChunk = "";
+        while (true) {
+          const colorStart = line.indexOf(this.COLOR_START_TAG, currentIndex);
+          if (colorStart === -1) {
+            // No more color tags, add remaining content
+            if (currentIndex < line.length) {
+              parts.push(line.slice(currentIndex));
             }
-            isInColor = true;
-            i += 6; // Skip the <color> tag
-            continue;
+            break;
           }
-          if (line.slice(i, i + 8) === "</color>") {
-            if (currentChunk) {
-              result += this.BLUE_COLOR + currentChunk + this.RESET_COLOR;
-              currentChunk = "";
-            }
-            isInColor = false;
-            i += 7; // Skip the </color> tag
-            continue;
+
+          // Add content before color tag
+          if (colorStart > currentIndex) {
+            parts.push(line.slice(currentIndex, colorStart));
           }
-          currentChunk += line[i];
+
+          // Find the end of colored section
+          const contentStart = colorStart + this.COLOR_START_LEN;
+          const colorEnd = line.indexOf(this.COLOR_END_TAG, contentStart);
+          if (colorEnd === -1) {
+            // Malformed tag, just add the rest
+            parts.push(line.slice(currentIndex));
+            break;
+          }
+
+          // Add colored content
+          parts.push(
+            this.BLUE_COLOR,
+            line.slice(contentStart, colorEnd),
+            this.RESET_COLOR
+          );
+
+          currentIndex = colorEnd + this.COLOR_END_LEN;
         }
 
-        // Handle any remaining chunk
-        if (currentChunk) {
-          result += isInColor
-            ? this.BLUE_COLOR + currentChunk + this.RESET_COLOR
-            : currentChunk;
-        }
-
-        return result;
+        return parts.join("");
       });
 
-      // Join lines with proper line endings
       return {
         content: processedLines.join("\n"),
+        lines: processedLines, // Store pre-split lines
       };
     });
   }
 
   static getFrame(index: number): string {
     return this.frames[index].content;
+  }
+
+  static getFrameLines(index: number): string[] {
+    return this.frames[index].lines;
   }
 
   static get frameCount(): number {
