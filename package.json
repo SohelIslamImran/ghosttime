@@ -1,11 +1,11 @@
 {
-  "name": "ghostty",
-  "version": "2.0.0",
-  "description": "Ghostty Terminal Animation",
+  "name": "ghosttime",
+  "version": "1.0.0",
+  "description": "Ghostty animation for your terminal with customizable colors",
   "module": "src/cli.ts",
   "type": "module",
   "bin": {
-    "ghostty": "./dist/cli.js"
+    "ghosttime": "./dist/cli.js"
   },
   "files": [
     "dist"
@@ -21,16 +21,18 @@
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   },
-   "keywords": [
+  "keywords": [
     "ghostty",
+    "ghosttime",
+    "animation",
     "terminal",
-    "animation"
+    "cli"
   ],
   "license": "MIT",
-  "repository": "https://github.com/SohelIslamImran/ghostty",
+  "repository": "https://github.com/SohelIslamImran/ghosttime",
   "bugs": {
-    "url": "https://github.com/SohelIslamImran/ghostty/issues"
+    "url": "https://github.com/SohelIslamImran/ghosttime/issues"
   },
-  "homepage": "https://github.com/SohelIslamImran/ghostty#readme",
+  "homepage": "https://github.com/SohelIslamImran/ghosttime#readme",
   "author": "SohelIslamImran <sohelislamimran@gmail.com> (https://github.com/SohelIslamImran)"
 }

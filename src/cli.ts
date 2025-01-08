@@ -39,13 +39,13 @@ function showColorHelp() {
   }
   console.log("\nUsage:");
   console.log(
-    "  ghostty -c <color>        Use a color name from the list above"
+    "  ghosttime -c <color>        Use a color name from the list above"
   );
   console.log(
-    "  ghostty -c <number>       Use an ANSI color code (30-37 or 90-97)"
+    "  ghosttime -c <number>       Use an ANSI color code (30-37 or 90-97)"
   );
-  console.log("  ghostty --colors          Show this color help");
-  console.log("  ghostty --select-color    Interactively select a color");
+  console.log("  ghosttime --colors          Show this color help");
+  console.log("  ghosttime --select-color    Interactively select a color");
   process.exit(0);
 }
 
