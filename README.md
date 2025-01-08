@@ -2,7 +2,7 @@
 
 Ghostty animation for your terminal with customizable colors.
 
-![Ghosttime Demo](/ghostty.mp4)
+https://github.com/user-attachments/assets/231a128d-57c1-4e64-a3aa-49ca763139b1
 
 ### Install and run globally
 
