@@ -119,6 +119,12 @@ let lastFrameIndex = -1; // Track last rendered frame to avoid re-rendering same
 let lastVerticalPadding = 0;
 let lastHorizontalPadding = 0;
 
+// Setup raw mode for keyboard input
+readline.emitKeypressEvents(process.stdin);
+if (process.stdin.isTTY) {
+  process.stdin.setRawMode(true);
+}
+
 function cleanup() {
   // Disable focus reporting, show cursor and restore main screen buffer
   process.stdout.write("\x1b[?1004l\x1b[?25h\x1b[?1049l");
@@ -198,14 +204,6 @@ function flushBuffer() {
 }
 
 function renderFrame(frameIndex: number) {
-  // Skip if terminal is too small
-  if (
-    terminalWidth < Animation.IMAGE_WIDTH ||
-    terminalHeight < Animation.IMAGE_HEIGHT
-  ) {
-    return;
-  }
-
   const verticalPadding = Math.max(
     0,
     Math.floor((terminalHeight - Animation.IMAGE_HEIGHT) / 2)
@@ -321,6 +319,7 @@ async function runAnimation() {
 
 // Initialize and start the animation
 async function main() {
+  // Parse arguments after terminal setup
   await parseArgs();
 
   // Set the highlight color before initializing
@@ -329,14 +328,8 @@ async function main() {
   // Initialize animation with data
   Animation.initialize(ANIMATION_DATA);
 
-  // Enable alternative screen buffer, hide cursor, and enable focus reporting
+  // Enable alternative screen buffer, hide cursor, and enable focus reporting first
   process.stdout.write("\x1b[?1049h\x1b[?25l\x1b[?1004h");
-
-  // Setup raw mode for keyboard input
-  readline.emitKeypressEvents(process.stdin);
-  if (process.stdin.isTTY) {
-    process.stdin.setRawMode(true);
-  }
 
   // Start the animation
   runAnimation().catch((error: Error) => {
