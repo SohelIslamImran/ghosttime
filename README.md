@@ -1,6 +1,6 @@
 # Ghosttime Terminal Animation
 
-Ghostty animation for your terminal with customizable colors.
+[Ghostty](https://ghostty.org) animation for your terminal with customizable colors. (Inspired from [ghostty.org](https://ghostty.org/))
 
 <https://github.com/user-attachments/assets/231a128d-57c1-4e64-a3aa-49ca763139b1>
 
@@ -17,7 +17,7 @@ ghosttime
 ### Run without installing
 
 ```bash
-npx ghosttime | bunx ghosttime
+npx ghosttime
 ```
 
 ### Commands
