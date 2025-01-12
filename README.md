@@ -1,6 +1,6 @@
 # Ghosttime Terminal Animation
 
-[Ghostty](https://ghostty.org) animation for your terminal with customizable colors. (Inspired from [ghostty.org](https://ghostty.org/))
+[Ghostty](https://ghostty.org) animation for any terminal with customizable colors. (Inspired from [ghostty.org](https://ghostty.org/))
 
 <https://github.com/user-attachments/assets/231a128d-57c1-4e64-a3aa-49ca763139b1>
 
