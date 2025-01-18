@@ -8,8 +8,8 @@ export class Animation {
   private static frames: Frame[] = [];
   private static highlightColor = "\x1b[34m"; // Default to blue
   private static readonly RESET_COLOR = "\x1b[0m";
-  private static readonly COLOR_START_TAG = "<color>";
-  private static readonly COLOR_END_TAG = "</color>";
+  private static readonly COLOR_START_TAG = "<c>";
+  private static readonly COLOR_END_TAG = "</c>";
   private static readonly COLOR_START_LEN = Animation.COLOR_START_TAG.length;
   private static readonly COLOR_END_LEN = Animation.COLOR_END_TAG.length;
 
