@@ -9,6 +9,7 @@ const MICROS_PER_FRAME = 30_000;
 const FRAME_DELAY = MICROS_PER_FRAME / 1000; // convert to milliseconds
 const MAX_FRAME_SKIP = 3; // Maximum number of frames to skip if behind schedule
 const CLEAR_AND_HOME = "\x1b[2J\x1b[H";
+const DEFAULT_DURATION = 0; // 0 means run indefinitely
 
 // Color mapping
 const colorMap: Record<string, string> = {
@@ -46,6 +47,9 @@ function showColorHelp() {
   );
   console.log("  ghosttime --colors          Show this color help");
   console.log("  ghosttime --select-color    Interactively select a color");
+  console.log(
+    "  ghosttime -t <seconds>      Run animation for specified duration"
+  );
   process.exit(0);
 }
 
@@ -78,6 +82,7 @@ async function selectColorInteractively(): Promise<string> {
 // Parse command line arguments
 const args = process.argv.slice(2);
 let colorArg = "\x1b[34m"; // Default blue color
+let durationInSeconds = DEFAULT_DURATION;
 
 async function parseArgs() {
   for (let i = 0; i < args.length; i++) {
@@ -96,8 +101,14 @@ async function parseArgs() {
         } else {
           colorArg = colorMap[color.toLowerCase()] || "\x1b[34m";
         }
+        i++; // Skip next argument
       }
-      break;
+    } else if (args[i] === "--timer" || args[i] === "-t") {
+      const duration = args[i + 1];
+      if (duration && /^\d+$/.test(duration)) {
+        durationInSeconds = Number.parseInt(duration);
+        i++; // Skip next argument
+      }
     }
   }
 }
@@ -267,6 +278,13 @@ async function runAnimation() {
 
   while (true) {
     const now = performance.now();
+
+    // Check if duration has elapsed (if timer is set)
+    const elapsed = now - start - totalPausedTime;
+    if (durationInSeconds > 0 && elapsed >= durationInSeconds * 1000) {
+      cleanup();
+      return;
+    }
 
     // Track paused time when focus changes
     if (!isTerminalFocused && focusLostTime === 0) {

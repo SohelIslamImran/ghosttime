@@ -39,6 +39,10 @@ ghosttime -c 91    # bright red
 
 # Interactive color selection
 ghosttime --select-color
+
+# Run with timer (duration in seconds)
+ghosttime -t 30    # Run for 30 seconds
+ghosttime --timer 60    # Run for 1 minute
 ```
 
 ### Available Colors
@@ -57,6 +61,7 @@ ghosttime --select-color
 - Smooth ghostty animation
 - Customizable colors
 - Interactive color selection
+- Timer option for timed execution
 - Focus-aware (pauses when terminal loses focus)
 - Automatically centers in terminal
 - Efficient rendering with minimal CPU usage

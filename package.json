@@ -1,7 +1,7 @@
 {
   "name": "ghosttime",
-  "version": "1.1.0",
-  "description": "Ghostty animation for your terminal with customizable colors",
+  "version": "1.2.0",
+  "description": "Ghostty animation for any terminal with customizable colors",
   "module": "src/cli.ts",
   "type": "module",
   "bin": {
