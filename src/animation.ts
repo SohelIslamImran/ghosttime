@@ -22,9 +22,14 @@ export class Animation {
 
   static initialize(animationData: AnimationData) {
     // Pre-calculate all frames with ANSI codes
-    this.frames = animationData.map((frameLines) => {
-      // Process each line of the frame
-      const processedLines = frameLines.map((line) => {
+    this.frames = new Array(animationData.length);
+
+    for (let frameIndex = 0; frameIndex < animationData.length; frameIndex++) {
+      const frameLines = animationData[frameIndex];
+      const processedLines = new Array(frameLines.length);
+
+      for (let lineIndex = 0; lineIndex < frameLines.length; lineIndex++) {
+        const line = frameLines[lineIndex];
         const parts: string[] = [];
         let currentIndex = 0;
 
@@ -62,13 +67,13 @@ export class Animation {
           currentIndex = colorEnd + this.COLOR_END_LEN;
         }
 
-        return parts.join("");
-      });
+        processedLines[lineIndex] = parts.join("");
+      }
 
-      return {
-        lines: processedLines, // Store pre-split lines for faster rendering
+      this.frames[frameIndex] = {
+        lines: processedLines,
       };
-    });
+    }
   }
 
   static getFrameLines(index: number): string[] {
