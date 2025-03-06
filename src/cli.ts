@@ -40,15 +40,18 @@ function showColorHelp() {
   }
   console.log("\nUsage:");
   console.log(
-    "  ghosttime -c <color>        Use a color name from the list above"
+    "  ghosttime -c <color>        Use a color name from the list above",
   );
   console.log(
-    "  ghosttime -c <number>       Use an ANSI color code (30-37 or 90-97)"
+    "  ghosttime -c <number>       Use an ANSI color code (30-37 or 90-97)",
   );
   console.log("  ghosttime --colors          Show this color help");
   console.log("  ghosttime --select-color    Interactively select a color");
   console.log(
-    "  ghosttime -t <seconds>      Run animation for specified duration"
+    "  ghosttime -t <seconds>      Run animation for specified duration",
+  );
+  console.log(
+    "  ghosttime --no-focus-pause  Continue animation even when terminal loses focus",
   );
   process.exit(0);
 }
@@ -83,6 +86,7 @@ async function selectColorInteractively(): Promise<string> {
 const args = process.argv.slice(2);
 let colorArg = "\x1b[34m"; // Default blue color
 let durationInSeconds = DEFAULT_DURATION;
+let pauseOnFocusLoss = true; // Default behavior is to pause when focus is lost
 
 async function parseArgs() {
   for (let i = 0; i < args.length; i++) {
@@ -109,6 +113,8 @@ async function parseArgs() {
         durationInSeconds = Number.parseInt(duration);
         i++; // Skip next argument
       }
+    } else if (args[i] === "--no-focus-pause" || args[i] === "-nf") {
+      pauseOnFocusLoss = false; // Don't pause when focus is lost
     }
   }
 }
@@ -177,7 +183,7 @@ process.stdout.on("resize", () => {
 function getCachedString(
   cache: Map<number, string>,
   width: number,
-  generator: (w: number) => string
+  generator: (w: number) => string,
 ): string {
   let str = cache.get(width);
   if (!str) {
@@ -217,11 +223,11 @@ function flushBuffer() {
 function renderFrame(frameIndex: number) {
   const verticalPadding = Math.max(
     0,
-    Math.floor((terminalHeight - Animation.IMAGE_HEIGHT) / 2)
+    Math.floor((terminalHeight - Animation.IMAGE_HEIGHT) / 2),
   );
   const horizontalPadding = Math.max(
     0,
-    Math.floor((terminalWidth - Animation.IMAGE_WIDTH) / 2)
+    Math.floor((terminalWidth - Animation.IMAGE_WIDTH) / 2),
   );
 
   // Only recalculate padding if dimensions changed
@@ -286,14 +292,16 @@ async function runAnimation() {
       return;
     }
 
-    // Track paused time when focus changes
-    if (!isTerminalFocused && focusLostTime === 0) {
-      focusLostTime = now;
-      shouldRender = true;
-    } else if (isTerminalFocused && focusLostTime > 0) {
-      totalPausedTime += now - focusLostTime;
-      focusLostTime = 0;
-      shouldRender = true;
+    // Track paused time when focus changes, but only if pauseOnFocusLoss is true
+    if (pauseOnFocusLoss) {
+      if (!isTerminalFocused && focusLostTime === 0) {
+        focusLostTime = now;
+        shouldRender = true;
+      } else if (isTerminalFocused && focusLostTime > 0) {
+        totalPausedTime += now - focusLostTime;
+        focusLostTime = 0;
+        shouldRender = true;
+      }
     }
 
     // Calculate frame index based on actual animation time (excluding paused time)
@@ -303,16 +311,19 @@ async function runAnimation() {
 
     // Check if we're falling behind
     const expectedFrame = Math.floor(
-      (now - start - totalPausedTime) / FRAME_DELAY
+      (now - start - totalPausedTime) / FRAME_DELAY,
     );
     const actualFrame = Math.floor(
-      (lastFrameTime - start - totalPausedTime) / FRAME_DELAY
+      (lastFrameTime - start - totalPausedTime) / FRAME_DELAY,
     );
     const behind = expectedFrame - actualFrame;
 
-    // Only render if focused and either it's a new frame or we're catching up
+    // Render if either:
+    // 1. Terminal is focused, or
+    // 2. We're not pausing on focus loss (--no-focus-pause flag)
+    // AND it's a new frame or we need to catch up or something else changed
     if (
-      isTerminalFocused &&
+      (isTerminalFocused || !pauseOnFocusLoss) &&
       (frameIndex !== lastFrameIndex || behind > 0 || shouldRender)
     ) {
       // Skip frames if we're too far behind
