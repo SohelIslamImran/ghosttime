@@ -34,8 +34,5 @@
     "url": "https://github.com/SohelIslamImran/ghosttime/issues"
   },
   "homepage": "https://github.com/SohelIslamImran/ghosttime#readme",
-  "author": "SohelIslamImran <sohelislamimran@gmail.com> (https://github.com/SohelIslamImran)",
-  "dependencies": {
-    "bun": "^1.2.4"
-  }
+  "author": "SohelIslamImran <sohelislamimran@gmail.com> (https://github.com/SohelIslamImran)"
 }

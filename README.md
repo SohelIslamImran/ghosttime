@@ -43,6 +43,11 @@ ghosttime --select-color
 # Run with timer (duration in seconds)
 ghosttime -t 30    # Run for 30 seconds
 ghosttime --timer 60    # Run for 1 minute
+
+# Continue animation even when terminal loses focus
+ghosttime --no-focus-pause
+# For short
+ghosttime -nf
 ```
 
 ### Available Colors
