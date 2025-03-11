@@ -13,12 +13,14 @@
   "scripts": {
     "prepare": "bun run build",
     "lint": "biome check --fix",
+    "release": "release-it",
     "build": "bun build ./src/cli.ts --outdir=dist --target=node --minify",
     "start": "bun dist/cli.js",
     "dev": "bun run ./src/cli.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@release-it/conventional-changelog": "^10.0.0",
     "@types/bun": "latest",
     "release-it": "^18.1.2",
     "typescript": "^5.8.2"

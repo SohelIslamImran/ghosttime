@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+import readline from "readline";
 import process from "process";
+
 import { Animation } from "./animation";
 import { ANIMATION_DATA } from "./animation-data";
-import readline from "readline";
 
 const MICROS_PER_FRAME = 30_000;
 const FRAME_DELAY = MICROS_PER_FRAME / 1000; // convert to milliseconds
