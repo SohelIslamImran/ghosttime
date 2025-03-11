@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "prepare": "bun run build",
+    "lint": "biome check --fix",
     "build": "bun build ./src/cli.ts --outdir=dist --target=node --minify",
     "start": "bun dist/cli.js",
     "dev": "bun run ./src/cli.ts"
@@ -19,7 +20,8 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/bun": "latest",
-    "typescript": "^5.0.0"
+    "release-it": "^18.1.2",
+    "typescript": "^5.8.2"
   },
   "keywords": [
     "ghostty",
@@ -34,5 +36,59 @@
     "url": "https://github.com/SohelIslamImran/ghosttime/issues"
   },
   "homepage": "https://github.com/SohelIslamImran/ghosttime#readme",
-  "author": "SohelIslamImran <sohelislamimran@gmail.com> (https://github.com/SohelIslamImran)"
+  "author": "SohelIslamImran <sohelislamimran@gmail.com> (https://github.com/SohelIslamImran)",
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release v${version}",
+      "tagName": "v${version}",
+      "push": true
+    },
+    "npm": {
+      "publish": true
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "infile": "CHANGELOG.md",
+        "preset": {
+          "name": "conventionalcommits",
+          "types": [
+            {
+              "type": "feat",
+              "section": "✨ Features"
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Bug Fixes"
+            },
+            {
+              "type": "docs",
+              "section": "📚 Documentation"
+            },
+            {
+              "type": "style",
+              "section": "🎨 Styles"
+            },
+            {
+              "type": "refactor",
+              "section": "🔨 Code Refactoring"
+            },
+            {
+              "type": "perf",
+              "section": "💨 Performance Improvements"
+            },
+            {
+              "type": "chore",
+              "section": "🛠️ Changes in Build Process & Tools"
+            }
+          ]
+        }
+      }
+    },
+    "hooks": {
+      "before:init": [
+        "bun lint",
+        "bun run build"
+      ]
+    }
+  }
 }
