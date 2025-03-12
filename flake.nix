@@ -14,7 +14,7 @@
       version = "1.3.0";
 
       src = ./.;
-      npmDepsHash = "sha256-LANlvgvf6ErIL+1hhqt2A77BVxxTe8V2uXlKdYgsz10=";
+      npmDepsHash = "sha256-+GgELPRO4kcncpugY1hd8xgLH1gn71ow9VU99GZwRU8=";
 
       nativeBuildInputs = with pkgs; [ bun ];
       buildInputs = with pkgs; [ nodejs ];
