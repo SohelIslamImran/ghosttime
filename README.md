@@ -43,6 +43,10 @@ ghosttime --select-color
 # Run with timer (duration in seconds)
 ghosttime -t 30    # Run for 30 seconds
 ghosttime --timer 60    # Run for 1 minute
+
+# Prevent animation from pausing when terminal loses focus
+ghosttime -nf
+ghosttime --no-focus-pause
 ```
 
 ### Available Colors
@@ -54,7 +58,7 @@ ghosttime --timer 60    # Run for 1 minute
 
 - Press `q` to quit
 - Press `Ctrl+C` to exit
-- Terminal focus controls animation pause/resume
+- Terminal focus controls animation pause/resume (unless disabled with `-n` flag)
 
 ### Features
 
@@ -62,6 +66,6 @@ ghosttime --timer 60    # Run for 1 minute
 - Customizable colors
 - Interactive color selection
 - Timer option for timed execution
-- Focus-aware (pauses when terminal loses focus)
+- Focus-aware (pauses when terminal loses focus, can be disabled)
 - Automatically centers in terminal
 - Efficient rendering with minimal CPU usage

@@ -6,8 +6,8 @@
     "useIgnoreFile": false
   },
   "files": {
-    "include": ["src/**/*"],
-    "ignore": ["dist/**/*"]
+    "include": ["src"],
+    "ignore": ["dist"]
   },
   "formatter": {
     "enabled": true,

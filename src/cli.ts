@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+import readline from "readline";
 import process from "process";
+
 import { Animation } from "./animation";
 import { ANIMATION_DATA } from "./animation-data";
-import readline from "readline";
 
 const MICROS_PER_FRAME = 30_000;
 const FRAME_DELAY = MICROS_PER_FRAME / 1000; // convert to milliseconds
@@ -50,6 +51,9 @@ function showColorHelp() {
   console.log(
     "  ghosttime -t <seconds>      Run animation for specified duration"
   );
+  console.log(
+    "  ghosttime --no-focus-pause  Prevent animation from pausing when terminal loses focus"
+  );
   process.exit(0);
 }
 
@@ -83,6 +87,7 @@ async function selectColorInteractively(): Promise<string> {
 const args = process.argv.slice(2);
 let colorArg = "\x1b[34m"; // Default blue color
 let durationInSeconds = DEFAULT_DURATION;
+let pauseOnFocusLost = true; // Default behavior is to pause when focus is lost
 
 async function parseArgs() {
   for (let i = 0; i < args.length; i++) {
@@ -109,6 +114,8 @@ async function parseArgs() {
         durationInSeconds = Number.parseInt(duration);
         i++; // Skip next argument
       }
+    } else if (args[i] === "--no-focus-pause" || args[i] === "-nf") {
+      pauseOnFocusLost = false;
     }
   }
 }
@@ -286,14 +293,16 @@ async function runAnimation() {
       return;
     }
 
-    // Track paused time when focus changes
-    if (!isTerminalFocused && focusLostTime === 0) {
-      focusLostTime = now;
-      shouldRender = true;
-    } else if (isTerminalFocused && focusLostTime > 0) {
-      totalPausedTime += now - focusLostTime;
-      focusLostTime = 0;
-      shouldRender = true;
+    // Track paused time when focus changes (only if pauseOnFocusLost is true)
+    if (pauseOnFocusLost) {
+      if (!isTerminalFocused && focusLostTime === 0) {
+        focusLostTime = now;
+        shouldRender = true;
+      } else if (isTerminalFocused && focusLostTime > 0) {
+        totalPausedTime += now - focusLostTime;
+        focusLostTime = 0;
+        shouldRender = true;
+      }
     }
 
     // Calculate frame index based on actual animation time (excluding paused time)
@@ -310,9 +319,9 @@ async function runAnimation() {
     );
     const behind = expectedFrame - actualFrame;
 
-    // Only render if focused and either it's a new frame or we're catching up
+    // Only render if focused (or if pauseOnFocusLost is false) and either it's a new frame or we're catching up
     if (
-      isTerminalFocused &&
+      (isTerminalFocused || !pauseOnFocusLost) &&
       (frameIndex !== lastFrameIndex || behind > 0 || shouldRender)
     ) {
       // Skip frames if we're too far behind
