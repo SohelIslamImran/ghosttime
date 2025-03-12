@@ -8,6 +8,7 @@
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
   in
   {
+    packages.x86_64-linux.default = self.packages.x86_64-linux.ghosttime;
     packages.x86_64-linux.ghosttime = pkgs.buildNpmPackage {
       pname = "ghosttime";
       version = "1.3.0";
