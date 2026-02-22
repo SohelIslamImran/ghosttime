@@ -173,3 +173,6 @@ dist
 
 # Finder (MacOS) folder config
 .DS_Store
+CLAUDE.md
+package-lock.json
+构建方法.md
