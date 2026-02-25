@@ -228,7 +228,9 @@ function flushBuffer() {
 }
 
 // Detect whether terminal supports DEC mode 2026 synchronized output
-// DECRPM response format: ESC[?2026;Ps$y, Ps=1 (set) or Ps=2 (reset) indicates support
+// DECRPM response format: ESC[?2026;Ps$y
+// Ps=1 (set), Ps=2 (reset/recognized), or Ps=3 (permanently set) indicate support;
+// Ps=0 (not recognized) and Ps=4 (permanently reset) indicate no support.
 const ESC = String.fromCharCode(0x1b);
 const DECRPM_PATTERN = new RegExp(`${ESC}\\[\\?2026;(\\d+)\\$y`);
 
