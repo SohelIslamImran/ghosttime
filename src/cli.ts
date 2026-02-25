@@ -10,11 +10,11 @@ const MICROS_PER_FRAME = 30_000;
 const FRAME_DELAY = MICROS_PER_FRAME / 1000; // convert to milliseconds
 const MAX_FRAME_SKIP = 3; // Maximum number of frames to skip if behind schedule
 const CLEAR_AND_HOME = "\x1b[2J\x1b[H";
-const CURSOR_HOME = "\x1b[H"; // 光标归位，不清屏
-const ERASE_LINE_RIGHT = "\x1b[K"; // 清除光标到行尾
-const ERASE_SCREEN_DOWN = "\x1b[J"; // 清除光标到屏幕末尾
-const SYNC_START = "\x1b[?2026h"; // 开启同步渲染缓冲
-const SYNC_END = "\x1b[?2026l"; // 结束缓冲，一次性渲染
+const CURSOR_HOME = "\x1b[H"; // Move cursor to home position without clearing
+const ERASE_LINE_RIGHT = "\x1b[K"; // Erase from cursor to end of line
+const ERASE_SCREEN_DOWN = "\x1b[J"; // Erase from cursor to end of screen
+const SYNC_START = "\x1b[?2026h"; // Begin synchronized output (buffer frame)
+const SYNC_END = "\x1b[?2026l"; // End synchronized output (flush frame)
 const DEFAULT_DURATION = 0; // 0 means run indefinitely
 
 // Color mapping
@@ -150,7 +150,7 @@ if (process.stdin.isTTY) {
 }
 
 function cleanup() {
-  // 关闭同步渲染、焦点报告，显示光标，恢复主屏幕缓冲区
+  // Disable synchronized output and focus reporting, show cursor, and restore main screen buffer
   process.stdout.write("\x1b[?2026l\x1b[?1004l\x1b[?25h\x1b[?1049l");
   process.exit(0);
 }
@@ -227,8 +227,8 @@ function flushBuffer() {
   }
 }
 
-// 检测终端是否支持 DEC mode 2026 同步渲染
-// DECRPM 响应格式: ESC[?2026;Ps$y，Ps=1 (set) 或 Ps=2 (reset) 表示支持
+// Detect whether terminal supports DEC mode 2026 synchronized output
+// DECRPM response format: ESC[?2026;Ps$y, Ps=1 (set) or Ps=2 (reset) indicates support
 const ESC = String.fromCharCode(0x1b);
 const DECRPM_PATTERN = new RegExp(`${ESC}\\[\\?2026;(\\d+)\\$y`);
 
@@ -248,7 +248,7 @@ function detectSyncOutput(): Promise<boolean> {
         clearTimeout(timeout);
         process.stdin.removeListener("data", onData);
         const ps = Number.parseInt(match[1]);
-        // Ps=1 set, Ps=2 reset(可识别), Ps=3 permanently set 均表示支持
+        // Ps=1 set, Ps=2 reset (recognized), and Ps=3 permanently set all indicate support
         resolve(ps >= 1 && ps <= 3);
       }
     };
@@ -291,14 +291,14 @@ function renderFrame(frameIndex: number) {
   outputPosition = 0;
 
   if (syncOutputSupported) {
-    // 同步渲染模式：缓冲整帧后一次性渲染，可安全使用全屏清除
+    // Synchronized mode: buffer the full frame then render once; safe to clear full screen
     writeToBuffer(SYNC_START);
     writeToBuffer(CLEAR_AND_HOME);
     if (verticalPadding > 0) {
       writeToBuffer(verticalPaddingStr);
     }
   } else {
-    // 降级覆写模式：光标归位 + 逐行覆写，避免清屏黑帧
+    // Fallback overwrite mode: cursor home + line-by-line overwrite to avoid black-frame flicker
     writeToBuffer(CURSOR_HOME);
     for (let i = 0; i < verticalPadding; i++) {
       writeToBuffer(ERASE_LINE_RIGHT);
@@ -322,7 +322,7 @@ function renderFrame(frameIndex: number) {
   if (syncOutputSupported) {
     writeToBuffer(SYNC_END);
   } else {
-    // 清除帧下方到屏幕末尾的残留内容
+    // Clear residual content from below the frame to end of screen
     writeToBuffer(ERASE_SCREEN_DOWN);
   }
 
@@ -413,7 +413,7 @@ async function main() {
   // Enable alternative screen buffer, hide cursor, and enable focus reporting first
   process.stdout.write("\x1b[?1049h\x1b[?25l\x1b[?1004h");
 
-  // 检测终端是否支持同步渲染（DEC mode 2026）
+  // Detect whether terminal supports synchronized output (DEC mode 2026)
   syncOutputSupported = await detectSyncOutput();
 
   // Start the animation
