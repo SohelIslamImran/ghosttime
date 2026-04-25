@@ -10,6 +10,11 @@ const MICROS_PER_FRAME = 30_000;
 const FRAME_DELAY = MICROS_PER_FRAME / 1000; // convert to milliseconds
 const MAX_FRAME_SKIP = 3; // Maximum number of frames to skip if behind schedule
 const CLEAR_AND_HOME = "\x1b[2J\x1b[H";
+const CURSOR_HOME = "\x1b[H"; // Move cursor to home position without clearing
+const ERASE_LINE_RIGHT = "\x1b[K"; // Erase from cursor to end of line
+const ERASE_SCREEN_DOWN = "\x1b[J"; // Erase from cursor to end of screen
+const SYNC_START = "\x1b[?2026h"; // Begin synchronized output (buffer frame)
+const SYNC_END = "\x1b[?2026l"; // End synchronized output (flush frame)
 const DEFAULT_DURATION = 0; // 0 means run indefinitely
 
 // Color mapping
@@ -125,6 +130,7 @@ let terminalHeight = process.stdout.rows || 24;
 let terminalWidth = process.stdout.columns || 80;
 let isTerminalFocused = true;
 let shouldRender = true;
+let syncOutputSupported = false;
 
 // Pre-calculate padding strings for different terminal widths
 const paddingCache = new Map<number, string>();
@@ -144,8 +150,8 @@ if (process.stdin.isTTY) {
 }
 
 function cleanup() {
-  // Disable focus reporting, show cursor and restore main screen buffer
-  process.stdout.write("\x1b[?1004l\x1b[?25h\x1b[?1049l");
+  // Disable synchronized output and focus reporting, show cursor, and restore main screen buffer
+  process.stdout.write("\x1b[?2026l\x1b[?1004l\x1b[?25h\x1b[?1049l");
   process.exit(0);
 }
 
@@ -221,6 +227,39 @@ function flushBuffer() {
   }
 }
 
+// Detect whether terminal supports DEC mode 2026 synchronized output
+// DECRPM response format: ESC[?2026;Ps$y
+// Ps=1 (set), Ps=2 (reset/recognized), or Ps=3 (permanently set) indicate support;
+// Ps=0 (not recognized) and Ps=4 (permanently reset) indicate no support.
+const ESC = String.fromCharCode(0x1b);
+const DECRPM_PATTERN = new RegExp(`${ESC}\\[\\?2026;(\\d+)\\$y`);
+
+function detectSyncOutput(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      process.stdin.removeListener("data", onData);
+      resolve(false);
+    }, 200);
+
+    let responseBuffer = "";
+
+    const onData = (data: Buffer) => {
+      responseBuffer += data.toString();
+      const match = responseBuffer.match(DECRPM_PATTERN);
+      if (match) {
+        clearTimeout(timeout);
+        process.stdin.removeListener("data", onData);
+        const ps = Number.parseInt(match[1]);
+        // Ps=1 set, Ps=2 reset (recognized), and Ps=3 permanently set all indicate support
+        resolve(ps >= 1 && ps <= 3);
+      }
+    };
+
+    process.stdin.on("data", onData);
+    process.stdout.write("\x1b[?2026$p");
+  });
+}
+
 function renderFrame(frameIndex: number) {
   const verticalPadding = Math.max(
     0,
@@ -253,12 +292,20 @@ function renderFrame(frameIndex: number) {
   // Start fresh buffer
   outputPosition = 0;
 
-  // Clear screen and move cursor to home
-  writeToBuffer(CLEAR_AND_HOME);
-
-  // Add vertical padding
-  if (verticalPadding > 0) {
-    writeToBuffer(verticalPaddingStr);
+  if (syncOutputSupported) {
+    // Synchronized mode: buffer the full frame then render once; safe to clear full screen
+    writeToBuffer(SYNC_START);
+    writeToBuffer(CLEAR_AND_HOME);
+    if (verticalPadding > 0) {
+      writeToBuffer(verticalPaddingStr);
+    }
+  } else {
+    // Fallback overwrite mode: cursor home + line-by-line overwrite to avoid black-frame flicker
+    writeToBuffer(CURSOR_HOME);
+    for (let i = 0; i < verticalPadding; i++) {
+      writeToBuffer(ERASE_LINE_RIGHT);
+      writeToBuffer("\n");
+    }
   }
 
   // Get pre-split lines and render
@@ -266,9 +313,19 @@ function renderFrame(frameIndex: number) {
   for (let i = 0; i < lines.length; i++) {
     writeToBuffer(paddingStr);
     writeToBuffer(lines[i]);
+    if (!syncOutputSupported) {
+      writeToBuffer(ERASE_LINE_RIGHT);
+    }
     if (i < lines.length - 1) {
       writeToBuffer("\n");
     }
+  }
+
+  if (syncOutputSupported) {
+    writeToBuffer(SYNC_END);
+  } else {
+    // Clear residual content from below the frame to end of screen
+    writeToBuffer(ERASE_SCREEN_DOWN);
   }
 
   // Flush the buffer to stdout
@@ -357,6 +414,9 @@ async function main() {
 
   // Enable alternative screen buffer, hide cursor, and enable focus reporting first
   process.stdout.write("\x1b[?1049h\x1b[?25l\x1b[?1004h");
+
+  // Detect whether terminal supports synchronized output (DEC mode 2026)
+  syncOutputSupported = await detectSyncOutput();
 
   // Start the animation
   runAnimation().catch((error: Error) => {
